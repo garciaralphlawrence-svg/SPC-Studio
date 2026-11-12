@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SPC Studio — Statistical Process Control in your browser</title>
+  <meta name="description" content="SPC Studio turns process data from Excel into control charts, process capability (Cp, Cpk, Pp, Ppk), normality checks and Pareto analysis, with plain-English findings. Free, runs in the browser. Built by Ralph Garcia.">
+  <meta property="og:title" content="SPC Studio — Statistical Process Control in your browser">
+  <meta property="og:description" content="Control charts with Western Electric rules, process capability, Anderson–Darling normality and Pareto analysis from any Excel file.">
+  <meta property="og:image" content="https://garciaralphlawrence-svg.github.io/Ralph-Portfolio/spc-studio.jpg">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M5 9h22M5 23h22' stroke='%23fca5a5' stroke-width='1.6' stroke-dasharray='2 2'/%3E%3Cpath d='M5 18l4-4 4 3 4-6 4 5 6-2' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/spc.css">
+  <script>try { const t = localStorage.getItem('spc-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="SPC Studio home">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M5 19l5-5 4 3 4-7 4 6 5-2"/></svg></span>
+      <span>SPC <b>Studio</b></span>
+      <span class="tag">Statistical Process Control</span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="control">Control Charts</button>
+      <button role="tab" data-tab="capability">Capability</button>
+      <button role="tab" data-tab="pareto">Pareto</button>
+      <button role="tab" data-tab="data">Your Data</button>
+      <button role="tab" data-tab="method">Method</button>
+    </nav>
+    <button class="icon-btn" id="printBtn" aria-label="Print or save as PDF" title="Print / save this page as PDF">
+      <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>
+    </button>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <div class="banner" role="note">Demo with <b>synthetic data</b>. Upload your own Excel file in <b>Your Data</b> — it is analysed in this browser tab and never sent anywhere.</div>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section class="panel" id="panel-overview" role="tabpanel">
+      <div class="hero">
+        <div>
+          <h1>Is your process <span class="grad">stable</span> — and is it <span class="grad">good enough</span>?</h1>
+          <p class="lead">Control charts, process capability and Pareto analysis from any spreadsheet, with every signal explained in plain English. The Six Sigma toolkit, free and in your browser.</p>
+        </div>
+        <div class="card">
+          <h3>Three questions SPC answers</h3>
+          <div class="find-list" style="gap:8px">
+            <div class="find" style="padding:8px 10px"><span class="ico lo">📈</span><div><b>Is it stable?</b><p>Control charts + Western Electric rules</p></div></div>
+            <div class="find" style="padding:8px 10px"><span class="ico mid">🎯</span><div><b>Is it capable?</b><p>Cp, Cpk, Pp, Ppk, defects per million</p></div></div>
+            <div class="find" style="padding:8px 10px"><span class="ico hi">📊</span><div><b>What do we fix first?</b><p>Pareto: the vital few causes</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Process health scorecard <small>click a row to open it</small></h3>
+        <div class="table-wrap"><table class="risk-table scorecard" id="scorecard"></table></div>
+      </div>
+
+      <div class="grid g2">
+        <div class="card"><h3>Key findings</h3><div class="find-list" id="findings"></div></div>
+        <div class="card"><h3>Biggest problem to fix first <small id="miniParetoTitle"></small></h3><div class="chart" id="chMiniPareto"></div><p class="note" id="miniParetoNote"></p></div>
+      </div>
+
+      <div class="card">
+        <h3>Where each tool fits in DMAIC</h3>
+        <div class="dmaic">
+          <div><b>Define</b><span>Pareto picks the problem worth solving.</span></div>
+          <div class="on"><b>Measure</b><span>Capability: how many defects today (PPM, sigma level).</span></div>
+          <div class="on"><b>Analyze</b><span>Control-chart signals point to special causes.</span></div>
+          <div class="on"><b>Improve</b><span>What-if: re-centre or cut variation, see the new Cpk.</span></div>
+          <div class="on"><b>Control</b><span>Keep charting; react only to real signals.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROL -->
+    <section class="panel" id="panel-control" role="tabpanel" hidden>
+      <div class="section-head">
+        <div><h2>Control Charts</h2><p id="ctlContext"></p></div>
+        <div class="pickers no-print"><span class="lbl">Process</span><div class="seg" id="ctlPick" role="radiogroup"></div></div>
+      </div>
+      <div class="insight" id="ctlInsight"></div>
+      <div class="kpis" id="ctlKpis"></div>
+      <div class="card">
+        <h3 id="ctlTitle"></h3>
+        <label class="check no-print" style="float:right;margin-top:-30px"><input type="checkbox" id="zones" checked> Show 1σ / 2σ zones</label>
+        <div class="chart tall" id="chMain"></div>
+      </div>
+      <div class="card" id="subCard"><h3 id="subTitle"></h3><div class="chart" id="chSub"></div></div>
+      <div class="card">
+        <h3>Signals to investigate <small>Western Electric rules + trend rule</small></h3>
+        <div class="table-wrap"><table class="risk-table sigtable" id="sigTable"></table></div>
+      </div>
+    </section>
+
+    <!-- CAPABILITY -->
+    <section class="panel" id="panel-capability" role="tabpanel" hidden>
+      <div class="section-head">
+        <div><h2>Process Capability</h2><p id="capContext"></p></div>
+        <div class="pickers no-print"><span class="lbl">Process</span><div class="seg" id="capPick" role="radiogroup"></div></div>
+      </div>
+      <div class="card no-print">
+        <div class="specs">
+          <label>Lower spec (LSL)<input id="lsl" type="number" step="any" placeholder="none"></label>
+          <label>Upper spec (USL)<input id="usl" type="number" step="any" placeholder="none"></label>
+          <label>Target<input id="target" type="number" step="any" placeholder="none"></label>
+          <span class="note" style="margin:0 0 8px">Leave one spec blank for a one-sided requirement (e.g. "55 minutes or less").</span>
+        </div>
+      </div>
+      <div class="insight" id="capInsight"></div>
+      <div class="kpis cap-kpis" id="capKpis"></div>
+      <div class="grid g2" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+        <div class="card"><h3>Distribution vs. specification <small>histogram with within (dashed) and overall (solid) normal curves</small></h3><div class="chart tall" id="chHist"></div></div>
+        <div class="card">
+          <h3>Improvement what-if</h3>
+          <div class="sim-row"><label>Move the average <output id="oShift"></output></label><input type="range" id="sShift"></div>
+          <div class="sim-row"><label>Reduce variation by <output id="oVar">0%</output></label><input type="range" id="sVar" min="0" max="60" value="0"></div>
+          <div class="compare">
+            <div class="box"><span>Today</span><b id="cpkNow"></b><span id="ppmNow"></span></div>
+            <div class="arrow">→</div>
+            <div class="box"><span>After change</span><b id="cpkNew"></b><span id="ppmNew"></span></div>
+          </div>
+          <p class="note" id="simNote"></p>
+          <div class="btn-row" style="margin-top:8px"><button class="btn" id="btnCentre">Centre on target</button></div>
+        </div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h3>Normality check <small>Anderson–Darling</small></h3><div id="normality"></div><div class="chart" id="chQQ"></div></div>
+        <div class="card"><h3>All capability statistics</h3><div class="table-wrap"><table class="risk-table" id="capTable"></table></div></div>
+      </div>
+    </section>
+
+    <!-- PARETO -->
+    <section class="panel" id="panel-pareto" role="tabpanel" hidden>
+      <div class="section-head">
+        <div><h2>Pareto Analysis</h2><p id="parContext"></p></div>
+        <div class="pickers no-print"><span class="lbl">Data</span><div class="seg" id="parPick" role="radiogroup"></div></div>
+      </div>
+      <div class="insight" id="parInsight"></div>
+      <div class="card"><h3 id="parTitle"></h3><div class="chart tall" id="chPareto"></div></div>
+      <div class="card"><div class="table-wrap"><table class="risk-table" id="parTable"></table></div></div>
+    </section>
+
+    <!-- DATA -->
+    <section class="panel" id="panel-data" role="tabpanel" hidden>
+      <div class="section-head"><div><h2>Your Data</h2><p>Upload an Excel or CSV file. It is read in this browser tab only — nothing is uploaded to a server.</p></div></div>
+      <label class="drop" id="drop" for="fileIn">
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <b>Drop an Excel / CSV file here, or click to choose</b>
+        <span>One row per measurement (or per sample / per category) with a header row. You choose the columns next.</span>
+      </label>
+      <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+      <div id="mapper"></div>
+      <div class="card">
+        <h3>Templates <small>download, replace with your data, upload</small></h3>
+        <div class="up-actions" id="templates"></div>
+        <p class="note">Measurements: one value per row (add a subgroup column such as "Hour" for X̄-R charts). Defectives: one row per sample with the number inspected and number defective. Pareto: a category column, with or without a count column.</p>
+      </div>
+    </section>
+
+    <!-- METHOD -->
+    <section class="panel method" id="panel-method" role="tabpanel" hidden>
+      <div class="section-head"><div><h2>Method</h2><p>Standard Shewhart SPC. All calculations run in your browser and were checked against SciPy.</p></div></div>
+      <div class="grid g2">
+        <div class="card">
+          <h3>Control charts</h3>
+          <p><b>I-MR</b> (individual values): σ<sub>within</sub> = M̄R / d₂ (d₂ = 1.128)</p>
+          <div class="formula">UCL/LCL = x̄ ± 3·M̄R/1.128 &nbsp;·&nbsp; MR: UCL = 3.267·M̄R</div>
+          <p><b>X̄-R</b> (subgroups of 2–10): σ<sub>within</sub> = R̄ / d₂</p>
+          <div class="formula">UCL/LCL = x̿ ± A₂·R̄ &nbsp;·&nbsp; R: UCL = D₄·R̄, LCL = D₃·R̄</div>
+          <p><b>p chart</b> (proportion defective, sample size can vary):</p>
+          <div class="formula">p̄ = Σdefective / Σinspected &nbsp;·&nbsp; limits = p̄ ± 3·√(p̄(1−p̄)/nᵢ)</div>
+          <h3>Signal rules</h3>
+          <ol id="rulesList"></ol>
+          <p>The range / moving-range charts use rule 1 only. Limits are calculated from all the data shown (Phase I).</p>
+        </div>
+        <div class="card">
+          <h3>Capability</h3>
+          <div class="formula">Cp = (USL−LSL)/6σ<sub>w</sub> &nbsp; Cpk = min(USL−μ, μ−LSL)/3σ<sub>w</sub></div>
+          <div class="formula">Pp, Ppk: same, using overall σ (sample standard deviation)</div>
+          <div class="formula">Cpm = (USL−LSL) / 6√(s² + (μ−T)²)</div>
+          <p><b>Expected PPM</b> = normal tail areas beyond the specs × 10⁶. <b>Z.bench</b> = Φ⁻¹(1 − total tail). <b>Sigma level</b> = Z.bench(overall) + 1.5 (the Six Sigma 1.5σ shift convention).</p>
+          <p><b>Rule of thumb:</b> Cpk ≥ 1.33 capable · 1.00–1.33 marginal · &lt; 1.00 not capable.</p>
+          <p><b>Within vs overall:</b> Cp/Cpk show what the process could do if it stayed stable; Pp/Ppk show what it actually delivered. A big gap means shifts or drift between subgroups.</p>
+          <h3>Normality</h3>
+          <p>Anderson–Darling test with the D'Agostino–Stephens small-sample adjustment. p &lt; 0.05 means the data are probably not normal, so the PPM estimates should be treated with caution.</p>
+          <h3>Constants used</h3>
+          <div class="table-wrap"><table class="risk-table consts" id="constTable"></table></div>
+        </div>
+      </div>
+      <p class="credit">Built by <a href="https://garciaralphlawrence-svg.github.io/Ralph-Portfolio/" target="_blank" rel="noopener">Ralph Garcia</a> · charts by ECharts · Excel reading by SheetJS</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+  <script src="https://garciaralphlawrence-svg.github.io/AI-Analytics-Studio/widget/kapitan.js" data-api="none" data-site="spc" defer></script>
+</body>
+</html>
